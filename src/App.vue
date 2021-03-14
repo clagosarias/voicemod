@@ -118,26 +118,18 @@ export default {
       this.sortParam = sortParam
     },
     selectVoice(voice) {
-      if (this.selectedVoice === voice.id) {
-        this.selectedVoice = ''
-      } else {
-        this.selectedVoice = voice.id
-      }
+      this.selectedVoice === voice.id ? this.selectedVoice = '' : this.selectedVoice = voice.id
     },
     toggleFavourites(voice) {
-      if (voice.isFavourite) {
-        this.removeFromFavourites(voice)
-      } else {
-        this.addToFavourites(voice)
-      }
+      voice.isFavourite ? this.removeFromFavourites(voice) : this.addToFavourites(voice)
     },
     addToFavourites(voice) {
       voice.isFavourite = true
       this.favourites.push(voice)
     },
-    removeFromFavourites(voice, _index) {
+    removeFromFavourites(voice) {
       voice.isFavourite = false
-      let index = _index || this.favourites.findIndex(favourite => favourite.id === voice.id)
+      let index = this.favourites.findIndex(favourite => favourite.id === voice.id)
       this.favourites.splice(index, 1)
     },
     selectRandom() {
