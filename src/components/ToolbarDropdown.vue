@@ -78,7 +78,7 @@ export default {
                 flex-wrap: unset;
             }
 
-            .vs__open-indicator {
+            .vs__open-indicator, .vs__clear {
                 fill: var(--primary-font-color);
             }
         }

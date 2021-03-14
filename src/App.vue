@@ -18,11 +18,19 @@
       </div>
 
       <div class="header__button">
-        <span class="voicemod-icons">button-random</span>
+        <span class="voicemod-icons" @click="selectRandom()">button-random</span>
       </div>
     </header>
 
     <div class="main">
+      <!--
+        These could be turn into a component because they are pretty similar actually.
+        Perhaps something like:
+        <MainSection status-icon="search-close/voice-favourite"
+                     :items="results/favourites"
+                     :selected-voice="selectedVoice"/>
+        And then just emit the same two events on click (selectVoice, toggleFavourites)
+       -->
       <div class="main__section favourites-section" v-if="favourites.length">
         <div class="main__section__title">
           <h3>Favourite voices</h3>
@@ -31,16 +39,16 @@
 
         <div class="main__section__grid">
           <div class="grid__item"
-               v-for="(voice, index) in favourites"
+               v-for="voice in favourites"
                v-bind:key="voice.id"
-               :class="{selected: voice.id === selectedVoice}"
-               @click="selectVoice(voice.id)">
+               :class="{selected: voice.id === selectedVoice, favourite: voice.isFavourite}"
+               @click="selectVoice(voice)">
 
               <div class="grid__item__img">
                 <img :src="require('./assets/' + voice.icon)">
 
                 <span class="img__favourite voicemod-icons"
-                      @click.stop="removeFromFavourites(voice, index)">search-close</span>
+                      @click.stop="toggleFavourites(voice)">search-close</span>
               </div>
 
               <p class="grid__item__title">{{voice.name}}</p>
@@ -55,11 +63,14 @@
         </div>
 
         <div class="main__section__grid">
+          <!--
+            This could also be turn into its own component
+           -->
           <div class="grid__item"
                v-for="voice in results"
                v-bind:key="voice.id"
                :class="{selected: voice.id === selectedVoice, favourite: voice.isFavourite}"
-               @click="selectVoice(voice.id)">
+               @click="selectVoice(voice)">
 
               <div class="grid__item__img">
                 <img :src="require('./assets/' + voice.icon)">
@@ -85,11 +96,11 @@ import 'vue-select/dist/vue-select.css';
 export default {
   data() {
     return {
-      selectedVoice: '',
-      results: voices,
       favourites: [],
+      selectedVoice: '',
       sortParam: '',
-      filterParam: ''
+      filterParam: '',
+      searchParam: ''
     };
   },
   components: {
@@ -98,50 +109,20 @@ export default {
   },
   methods: {
     makeSearch(searchParam) {
-      if (!searchParam) {
-        this.resetResults();
-      } else {
-        this.results = voices.filter(voice => {
-          if (this.filterParam) {
-            return voice.name.toLowerCase().includes(searchParam.toLowerCase()) && voice.tags.includes(this.filterParam)
-          } else {
-            return voice.name.toLowerCase().includes(searchParam.toLowerCase())
-          }
-        })
-        this.sortItems()
-      }
+      this.searchParam = searchParam
     },
     filterItems(filterParam) {
-      this.filterParam = filterParam || this.filterParam
-      this.results = voices.filter(voice => voice.tags.includes(this.filterParam))
-      this.sortItems()
+      this.filterParam = filterParam
     },
     sortItems(sortParam) {
-      this.sortParam = sortParam || this.sortParam
-      if (!this.sortParam) {
-        return
-      }
-
-      if (this.sortParam === 'Asc') {
-        this.results.sort(function(a, b) {
-          return a.name.localeCompare(b.name);
-        })
-      } else if (this.sortParam === 'Desc') {
-        this.results.sort(function(a, b) {
-          return b.name.localeCompare(a.name);
-        })
-      }
+      this.sortParam = sortParam
     },
-    selectVoice(id) {
-      if (this.selectedVoice === id) {
+    selectVoice(voice) {
+      if (this.selectedVoice === voice.id) {
         this.selectedVoice = ''
       } else {
-        this.selectedVoice = id
+        this.selectedVoice = voice.id
       }
-    },
-    resetResults() {
-      this.results = voices
-      this.sortItems()
     },
     toggleFavourites(voice) {
       if (voice.isFavourite) {
@@ -158,6 +139,10 @@ export default {
       voice.isFavourite = false
       let index = _index || this.favourites.findIndex(favourite => favourite.id === voice.id)
       this.favourites.splice(index, 1)
+    },
+    selectRandom() {
+      let randomIndex = Math.floor(Math.random() * this.results.length)
+      this.selectVoice(this.results[randomIndex])
     }
   },
   computed: {
@@ -182,7 +167,24 @@ export default {
 
       return categories
     },
-  },
+    results() {
+      let result = voices.filter(voice => this.filterParam ? voice.tags.includes(this.filterParam) : voice)
+
+      result = result.filter(voice => voice.name.toLowerCase().includes(this.searchParam.toLowerCase()))
+
+      if (this.sortParam === 'Asc') {
+        result.sort(function(a, b) {
+          return a.name.localeCompare(b.name);
+        })
+      } else if (this.sortParam === 'Desc') {
+        result.sort(function(a, b) {
+          return b.name.localeCompare(a.name);
+        })
+      }
+
+      return result
+    }
+  }
 };
 </script>
 
